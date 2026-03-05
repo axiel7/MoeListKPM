@@ -32,7 +32,7 @@ fun main() {
             title = stringResource(UiRes.string.app_name),
             icon = painterResource(UiRes.drawable.moelist_round_v3),
             alwaysOnTop = true,
-            state = rememberWindowState(width = 600.dp, height = 800.dp),
+            state = rememberWindowState(width = 800.dp, height = 600.dp),
         ) {
             val viewModel = koinViewModel<MainViewModel>()
             val windowSizeClass = calculateWindowSizeClass()
