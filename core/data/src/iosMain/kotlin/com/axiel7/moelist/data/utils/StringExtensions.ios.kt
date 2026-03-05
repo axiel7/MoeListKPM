@@ -8,9 +8,19 @@ import platform.Foundation.*
 import platform.UIKit.*
 
 actual fun String.format(format: String, vararg args: Any?): String {
-    // Note: NSString.stringWithFormat in Kotlin can be tricky with varargs.
-    // This is a basic bridge; for complex formatting might need a different approach.
-    return NSString.stringWithFormat(this, *args)
+    val iosFormat = this.replace("%s", "%@")
+    return when (args.size) {
+        0 -> iosFormat
+        1 -> NSString.stringWithFormat(iosFormat, args[0])
+        2 -> NSString.stringWithFormat(iosFormat, args[0], args[1])
+        3 -> NSString.stringWithFormat(iosFormat, args[0], args[1], args[2])
+        4 -> NSString.stringWithFormat(iosFormat, args[0], args[1], args[2], args[3])
+        5 -> NSString.stringWithFormat(iosFormat, args[0], args[1], args[2], args[3], args[4])
+        6 -> NSString.stringWithFormat(iosFormat, args[0], args[1], args[2], args[3], args[4], args[5])
+        7 -> NSString.stringWithFormat(iosFormat, args[0], args[1], args[2], args[3], args[4], args[5], args[6])
+        8 -> NSString.stringWithFormat(iosFormat, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7])
+        else -> iosFormat
+    }
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
