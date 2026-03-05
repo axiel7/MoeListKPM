@@ -9,9 +9,9 @@
           "image-name" : "moelist_foreground_v3.svg",
           "name" : "moelist_foreground_v3",
           "position" : {
-            "scale" : 2,
+            "scale" : 2.25,
             "translation-in-points" : [
-              0,
+              4,
               0
             ]
           }
