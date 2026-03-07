@@ -1,5 +1,6 @@
 package com.axiel7.moelist
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,6 +21,7 @@ import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import com.axiel7.moelist.data.model.media.MediaType
 import com.axiel7.moelist.data.model.ui.TabletMode
+import com.axiel7.moelist.data.model.ui.ThemeStyle
 import com.axiel7.moelist.main.MainEvent
 import com.axiel7.moelist.main.MainUiState
 import com.axiel7.moelist.main.MainView
@@ -40,7 +42,6 @@ fun App(
     windowWidthSizeClass: WindowWidthSizeClass,
     lastTabOpened: Int,
     dynamicColorSeed: Color? = null,
-    onThemeChange: ((isDarkTheme: Boolean) -> Unit)? = null
 ) {
     val uriHandler = LocalUriHandler.current
     val startKey = remember(lastTabOpened) {
@@ -60,6 +61,8 @@ fun App(
         TabletMode.LANDSCAPE -> windowWidthSizeClass == WindowWidthSizeClass.Compact
         TabletMode.NEVER -> true
     }
+    val isDarkTheme = if (uiState.theme == ThemeStyle.FOLLOW_SYSTEM) isSystemInDarkTheme()
+    else uiState.theme == ThemeStyle.DARK
 
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
@@ -88,7 +91,10 @@ fun App(
     }
 
     MoeListTheme(
-        dynamicColorSeed = dynamicColorSeed
+        darkTheme = isDarkTheme,
+        dynamicColorSeed = dynamicColorSeed,
+        useBlackColors = uiState.useBlackColors,
+        paletteStyle = uiState.paletteStyle,
     ) {
         val backgroundColor = MaterialTheme.colorScheme.background
         Surface(

@@ -3,6 +3,7 @@ package com.axiel7.moelist
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -11,11 +12,13 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
+import com.axiel7.moelist.data.model.ui.ThemeStyle
 import com.axiel7.moelist.main.MainViewModel
 import com.axiel7.moelist.ui.base.model.BottomDestination.Companion.toBottomDestinationIndex
 import com.axiel7.moelist.ui.base.navigation.DeepLink
@@ -54,12 +57,13 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val darkTheme = isSystemInDarkTheme()
+            val isDarkTheme = if (uiState.theme == ThemeStyle.FOLLOW_SYSTEM) isSystemInDarkTheme()
+            else uiState.theme == ThemeStyle.DARK
             val windowSizeClass = calculateWindowSizeClass(this)
 
             App(
                 dynamicColorSeed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (darkTheme) dynamicDarkColorScheme(this).primary else dynamicLightColorScheme(
+                    if (isDarkTheme) dynamicDarkColorScheme(this).primary else dynamicLightColorScheme(
                         this
                     ).primary
                 } else null,
@@ -68,6 +72,19 @@ class MainActivity : AppCompatActivity() {
                 windowWidthSizeClass = windowSizeClass.widthSizeClass,
                 lastTabOpened = lastTabOpened,
             )
+
+            DisposableEffect(isDarkTheme) {
+                val systemBarStyle = SystemBarStyle.auto(
+                    lightScrim = android.graphics.Color.TRANSPARENT,
+                    darkScrim = android.graphics.Color.TRANSPARENT,
+                    detectDarkMode = { isDarkTheme }
+                )
+                enableEdgeToEdge(
+                    statusBarStyle = systemBarStyle,
+                    navigationBarStyle = systemBarStyle,
+                )
+                onDispose {}
+            }
         }
     }
 
