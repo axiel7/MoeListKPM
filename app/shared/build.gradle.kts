@@ -64,6 +64,8 @@ kotlin {
             implementation(libs.androidx.datastore.preferences)
 
             implementation(libs.androidx.room.runtime)
+
+            api(libs.oidc.appsupport)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -84,6 +86,7 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.java.keyring)
         }
     }
 

@@ -13,9 +13,15 @@ import com.axiel7.moelist.ui.base.model.BottomDestination.Companion.toBottomDest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.koin.compose.viewmodel.koinViewModel
+import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
+import org.publicvalue.multiplatform.oidc.appsupport.IosCodeAuthFlowFactory
+import org.publicvalue.multiplatform.oidc.tokenstore.IosKeychainTokenStore
 
+@OptIn(ExperimentalOpenIdConnect::class)
 @Suppress("unused") // Called from Swift
 fun initApp() = initApp(
+    tokenStore = IosKeychainTokenStore(),
+    codeAuthFlowFactory = IosCodeAuthFlowFactory(),
     databaseBuilder = getDatabaseBuilder(),
     createDataStore = { createDataStore(it) }
 )
@@ -43,8 +49,8 @@ fun MainViewController() = ComposeUIViewController {
 
     App(
         uiState = uiState,
+        event = viewModel,
         windowWidthSizeClass = windowSizeClass.widthSizeClass,
         lastTabOpened = lastTabOpened,
-        saveLastTab = viewModel::saveLastTab,
     )
 }

@@ -10,6 +10,7 @@ import com.axiel7.moelist.data.local.searchhistory.SearchHistoryDao
 import com.axiel7.moelist.data.network.Api
 import com.axiel7.moelist.data.network.JikanApi
 import com.axiel7.moelist.data.network.KtorClient
+import com.axiel7.moelist.data.network.OAuthService
 import com.axiel7.moelist.data.repository.AnimeRepository
 import com.axiel7.moelist.data.repository.DefaultPreferencesRepository
 import com.axiel7.moelist.data.repository.LoginRepository
@@ -23,16 +24,17 @@ import com.axiel7.moelist.screens.calendar.CalendarViewModel
 import com.axiel7.moelist.screens.details.MediaDetailsViewModel
 import com.axiel7.moelist.screens.editmedia.EditMediaViewModel
 import com.axiel7.moelist.screens.home.HomeViewModel
+import com.axiel7.moelist.screens.login.LoginViewModel
 import com.axiel7.moelist.screens.more.MoreViewModel
 import com.axiel7.moelist.screens.more.notifications.NotificationsViewModel
 import com.axiel7.moelist.screens.more.settings.SettingsViewModel
 import com.axiel7.moelist.screens.more.settings.list.ListStyleSettingsViewModel
-import com.axiel7.moelist.screens.userlist.UserMediaListViewModel
 import com.axiel7.moelist.screens.profile.ProfileViewModel
 import com.axiel7.moelist.screens.ranking.MediaRankingViewModel
 import com.axiel7.moelist.screens.recommendations.RecommendationsViewModel
 import com.axiel7.moelist.screens.search.SearchViewModel
 import com.axiel7.moelist.screens.season.SeasonChartViewModel
+import com.axiel7.moelist.screens.userlist.UserMediaListViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,8 +44,14 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
+import org.publicvalue.multiplatform.oidc.flows.CodeAuthFlowFactory
+import org.publicvalue.multiplatform.oidc.tokenstore.TokenStore
 
+@OptIn(ExperimentalOpenIdConnect::class)
 fun initApp(
+    tokenStore: TokenStore,
+    codeAuthFlowFactory: CodeAuthFlowFactory,
     databaseBuilder: RoomDatabase.Builder<MoeListDatabase>,
     createDataStore: (String) -> DataStore<Preferences>,
 ) {
@@ -67,7 +75,9 @@ fun initApp(
         }
 
         val networkModule = module {
-            single { KtorClient(isDebug = false, get<GlobalVariables>()).ktorHttpClient }
+            single { codeAuthFlowFactory }
+            single { OAuthService(tokenStore, codeAuthFlowFactory) }
+            single { KtorClient(get(), isDebug = false).ktorHttpClient }
             singleOf(::Api)
             singleOf(::JikanApi)
         }
@@ -81,6 +91,7 @@ fun initApp(
         }
 
         val viewModelModule = module {
+            viewModelOf(::LoginViewModel)
             viewModelOf(::SettingsViewModel)
             viewModelOf(::CalendarViewModel)
             viewModelOf(::MediaDetailsViewModel)

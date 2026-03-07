@@ -1,25 +1,27 @@
 package com.axiel7.moelist.data.network
 
-import com.axiel7.moelist.data.GlobalVariables
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
-import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
+import org.publicvalue.multiplatform.oidc.ktor.oidcBearer
 
 class KtorClient(
+    oAuthService: OAuthService,
     isDebug: Boolean,
-    globalVariables: GlobalVariables
 ) {
     companion object {
         const val CLIENT_ID = "9d64c3963e0f5de53083571d45016565"
     }
 
+    @OptIn(ExperimentalOpenIdConnect::class)
     val ktorHttpClient = HttpClient {
 
         expectSuccess = false
@@ -42,9 +44,16 @@ class KtorClient(
             }
         }
 
+        install(Auth) {
+            oidcBearer(
+                tokenStore = oAuthService.tokenStore,
+                refreshHandler = oAuthService.refreshHandler,
+                client = oAuthService.client,
+            )
+        }
+
         install(DefaultRequest) {
             header("X-MAL-CLIENT-ID", CLIENT_ID)
-            globalVariables.accessToken?.let { header(HttpHeaders.Authorization, "Bearer $it") }
         }
     }
 }

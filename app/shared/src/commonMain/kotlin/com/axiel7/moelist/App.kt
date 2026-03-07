@@ -81,7 +81,6 @@ fun App(
                 DeepLink.Type.MANGA -> {
                     navActionManager.toMediaDetails(MediaType.MANGA, deepLink.data as Int)
                 }
-                DeepLink.Type.LOGIN -> { event.getAccessToken(deepLink.data as String) }
 
                 DeepLink.Type.EXTERNAL -> { uriHandler.openUri(deepLink.data as String) }
             }
@@ -98,7 +97,7 @@ fun App(
         ) {
             MainView(
                 isCompactScreen = isCompactScreen,
-                isLoggedIn = !uiState.accessToken.isNullOrEmpty(),
+                isLoggedIn = uiState.isLoggedIn,
                 useListTabs = uiState.useListTabs,
                 isBottomDestination = isBottomDestination,
                 topLevelBackStack = topLevelBackStack,

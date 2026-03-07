@@ -19,10 +19,12 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalOpenIdConnect::class)
 fun main() {
-    initApp()
+    val tokenStore = JvmKeyringTokenStore()
+    initApp(tokenStore = tokenStore)
 
     System.setProperty("apple.awt.application.appearance", "system")
 
@@ -54,9 +56,9 @@ fun main() {
 
             App(
                 uiState = uiState,
+                event = viewModel,
                 lastTabOpened = lastTabOpened,
                 windowWidthSizeClass = windowSizeClass.widthSizeClass,
-                saveLastTab = viewModel::saveLastTab
             )
         }
     }

@@ -1,7 +1,6 @@
 package com.axiel7.moelist.data.repository
 
 import androidx.annotation.IntRange
-import com.axiel7.moelist.data.GlobalVariables
 import com.axiel7.moelist.data.model.Response
 import com.axiel7.moelist.data.model.manga.MangaDetails
 import com.axiel7.moelist.data.model.manga.MangaList
@@ -15,10 +14,9 @@ import com.axiel7.moelist.data.network.Api
 import io.ktor.http.HttpStatusCode
 
 class MangaRepository(
-    globalVariables: GlobalVariables,
     private val api: Api,
     private val defaultPreferencesRepository: DefaultPreferencesRepository
-) : BaseRepository(globalVariables, api, defaultPreferencesRepository) {
+) {
 
     companion object {
         private const val LIST_STATUS_FIELDS =
@@ -44,7 +42,7 @@ class MangaRepository(
     ): MangaDetails? {
         return try {
             api.getMangaDetails(mangaId, MANGA_DETAILS_FIELDS)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -55,7 +53,7 @@ class MangaRepository(
         page: String? = null
     ): Response<List<UserMangaList>> {
         return try {
-            val result = if (page == null) api.getUserMangaList(
+            if (page == null) api.getUserMangaList(
                 status = status,
                 sort = sort,
                 limit = null,
@@ -63,8 +61,6 @@ class MangaRepository(
                 fields = USER_MANGA_LIST_FIELDS,
             )
             else api.getUserMangaList(page)
-            val retry = result.error?.let { handleResponseError(it) }
-            return if (retry == true) getUserMangaList(status, sort, page) else result
         } catch (e: Exception) {
             Response(message = e.message)
         }
@@ -86,7 +82,7 @@ class MangaRepository(
         comments: String? = null,
     ): MyMangaListStatus? {
         return try {
-            val result = api.updateUserMangaList(
+            api.updateUserMangaList(
                 mangaId,
                 status,
                 score,
@@ -101,25 +97,7 @@ class MangaRepository(
                 tags,
                 comments
             )
-            val retry = result.error?.let { handleResponseError(it) }
-            return if (retry == true) {
-                updateMangaEntry(
-                    mangaId,
-                    status,
-                    score,
-                    chaptersRead,
-                    volumesRead,
-                    startDate,
-                    endDate,
-                    isRereading,
-                    numRereads,
-                    rereadValue,
-                    priority,
-                    tags,
-                    comments
-                )
-            } else result
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -130,7 +108,7 @@ class MangaRepository(
         return try {
             val result = api.deleteMangaEntry(mangaId)
             return result.status == HttpStatusCode.OK
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -142,7 +120,7 @@ class MangaRepository(
         page: String? = null
     ): Response<List<MangaList>> {
         return try {
-            val result = if (page == null) api.getMangaList(
+            if (page == null) api.getMangaList(
                 query = query,
                 limit = limit,
                 offset = offset,
@@ -150,8 +128,6 @@ class MangaRepository(
                 fields = SEARCH_FIELDS,
             )
             else api.getMangaList(page)
-            result.error?.let { handleResponseError(it) }
-            return result
         } catch (e: Exception) {
             Response(message = e.message)
         }
@@ -163,16 +139,13 @@ class MangaRepository(
         page: String? = null
     ): Response<List<MangaRanking>> {
         return try {
-            val result =
-                if (page == null) api.getMangaRanking(
-                    rankingType = rankingType.serialName,
-                    limit = limit,
-                    nsfw = defaultPreferencesRepository.nsfwInt(),
-                    fields = RANKING_FIELDS,
-                )
-                else api.getMangaRanking(page)
-            result.error?.let { handleResponseError(it) }
-            return result
+            if (page == null) api.getMangaRanking(
+                rankingType = rankingType.serialName,
+                limit = limit,
+                nsfw = defaultPreferencesRepository.nsfwInt(),
+                fields = RANKING_FIELDS,
+            )
+            else api.getMangaRanking(page)
         } catch (e: Exception) {
             Response(message = e.message)
         }
@@ -192,7 +165,6 @@ class MangaRepository(
                 fields = "id",
             ) else api.getUserMangaList(page)
             result.error?.let {
-                handleResponseError(it)
                 return Response(error = result.error, message = result.message)
             }
             if (result.paging?.next != null) {

@@ -35,6 +35,7 @@ kotlin {
             api(libs.ktor.client.core)
             api(libs.ktor.client.logging)
             api(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.auth)
             api(libs.ktor.serialization.kotlinx.json)
 
             implementation(libs.kotlinx.coroutines.core)
@@ -49,6 +50,9 @@ kotlin {
 
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
+
+            api(libs.oidc.appsupport)
+            api(libs.oidc.ktor)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

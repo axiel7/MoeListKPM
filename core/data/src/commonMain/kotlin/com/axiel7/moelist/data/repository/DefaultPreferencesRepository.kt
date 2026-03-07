@@ -7,16 +7,15 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.axiel7.moelist.data.GlobalVariables
-import com.axiel7.moelist.data.model.AccessToken
+import com.axiel7.moelist.data.model.media.ListStatusDto
+import com.axiel7.moelist.data.model.media.MediaSort
+import com.axiel7.moelist.data.model.media.TitleLanguage
 import com.axiel7.moelist.data.model.ui.AppLanguage
 import com.axiel7.moelist.data.model.ui.ItemsPerRow
 import com.axiel7.moelist.data.model.ui.ListStyle
 import com.axiel7.moelist.data.model.ui.StartTab
 import com.axiel7.moelist.data.model.ui.TabletMode
 import com.axiel7.moelist.data.model.ui.ThemeStyle
-import com.axiel7.moelist.data.model.media.ListStatusDto
-import com.axiel7.moelist.data.model.media.MediaSort
-import com.axiel7.moelist.data.model.media.TitleLanguage
 import com.axiel7.moelist.data.utils.getValue
 import com.axiel7.moelist.data.utils.setValue
 import com.materialkolor.PaletteStyle
@@ -27,20 +26,10 @@ class DefaultPreferencesRepository(
     private val globalVariables: GlobalVariables,
     private val dataStore: DataStore<Preferences>
 ) {
-    val accessToken = dataStore.getValue(ACCESS_TOKEN_KEY)
-    val refreshToken = dataStore.getValue(REFRESH_TOKEN_KEY)
-
-    suspend fun saveTokens(value: AccessToken) {
-        dataStore.edit {
-            if (value.accessToken != null) it[ACCESS_TOKEN_KEY] = value.accessToken
-            if (value.refreshToken != null) it[REFRESH_TOKEN_KEY] = value.refreshToken
-        }
-    }
-
     suspend fun removeTokens() {
         dataStore.edit {
-            it.remove(ACCESS_TOKEN_KEY)
-            it.remove(REFRESH_TOKEN_KEY)
+            it.remove(OLD_ACCESS_TOKEN_KEY)
+            it.remove(OLD_REFRESH_TOKEN_KEY)
         }
     }
 
@@ -56,13 +45,13 @@ class DefaultPreferencesRepository(
     }
 
     val lang = dataStore.getValue(LANG_KEY, AppLanguage.FOLLOW_SYSTEM.value)
-        .map { AppLanguage.Companion.valueOf(isoTag = it) ?: AppLanguage.FOLLOW_SYSTEM }
+        .map { AppLanguage.valueOf(isoTag = it) ?: AppLanguage.FOLLOW_SYSTEM }
     suspend fun setLang(value: AppLanguage) {
         dataStore.setValue(LANG_KEY, value.value)
     }
 
     val theme = dataStore.getValue(THEME_KEY, ThemeStyle.FOLLOW_SYSTEM.name)
-        .map { ThemeStyle.Companion.valueOfOrNull(it) ?: ThemeStyle.FOLLOW_SYSTEM }
+        .map { ThemeStyle.valueOfOrNull(it) ?: ThemeStyle.FOLLOW_SYSTEM }
     suspend fun setTheme(value: ThemeStyle) {
         dataStore.setValue(THEME_KEY, value.name)
     }
@@ -110,21 +99,21 @@ class DefaultPreferencesRepository(
     }
 
     val animeListSort = dataStore.getValue(ANIME_LIST_SORT_KEY, MediaSort.ANIME_TITLE.value)
-        .map { MediaSort.Companion.valueOf(malValue = it) ?: MediaSort.ANIME_TITLE }
+        .map { MediaSort.valueOf(malValue = it) ?: MediaSort.ANIME_TITLE }
 
     suspend fun setAnimeListSort(value: MediaSort) {
         dataStore.setValue(ANIME_LIST_SORT_KEY, value.value)
     }
 
     val mangaListSort = dataStore.getValue(MANGA_LIST_SORT_KEY, MediaSort.MANGA_TITLE.value)
-        .map { MediaSort.Companion.valueOf(malValue = it) ?: MediaSort.MANGA_TITLE }
+        .map { MediaSort.valueOf(malValue = it) ?: MediaSort.MANGA_TITLE }
 
     suspend fun setMangaListSort(value: MediaSort) {
         dataStore.setValue(MANGA_LIST_SORT_KEY, value.value)
     }
 
     val startTab = dataStore.getValue(START_TAB_KEY, StartTab.LAST_USED.value)
-        .map { StartTab.Companion.valueOf(tabName = it) }
+        .map { StartTab.valueOf(tabName = it) }
     suspend fun setStartTab(value: StartTab) {
         dataStore.setValue(START_TAB_KEY, value.value)
     }
@@ -159,7 +148,7 @@ class DefaultPreferencesRepository(
     }
 
     val generalListStyle = dataStore.getValue(GENERAL_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-        .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+        .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setGeneralListStyle(value: ListStyle) {
         dataStore.setValue(GENERAL_LIST_STYLE_KEY, value.name)
@@ -171,7 +160,7 @@ class DefaultPreferencesRepository(
     }
 
     val gridItemsPerRow = dataStore.getValue(GRID_ITEMS_PER_ROW_KEY, ItemsPerRow.DEFAULT.value)
-        .map { ItemsPerRow.Companion.valueOf(it) ?: ItemsPerRow.DEFAULT }
+        .map { ItemsPerRow.valueOf(it) ?: ItemsPerRow.DEFAULT }
 
     suspend fun setGridItemsPerRow(value: ItemsPerRow) {
         dataStore.setValue(GRID_ITEMS_PER_ROW_KEY, value.value)
@@ -179,7 +168,7 @@ class DefaultPreferencesRepository(
 
     val animeCurrentListStyle =
         dataStore.getValue(ANIME_CURRENT_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setAnimeCurrentListStyle(value: ListStyle) {
         dataStore.setValue(ANIME_CURRENT_LIST_STYLE_KEY, value.name)
@@ -187,7 +176,7 @@ class DefaultPreferencesRepository(
 
     val animePlannedListStyle =
         dataStore.getValue(ANIME_PLANNED_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setAnimePlannedListStyle(value: ListStyle) {
         dataStore.setValue(ANIME_PLANNED_LIST_STYLE_KEY, value.name)
@@ -195,7 +184,7 @@ class DefaultPreferencesRepository(
 
     val animeCompletedListStyle =
         dataStore.getValue(ANIME_COMPLETED_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setAnimeCompletedListStyle(value: ListStyle) {
         dataStore.setValue(ANIME_COMPLETED_LIST_STYLE_KEY, value.name)
@@ -203,7 +192,7 @@ class DefaultPreferencesRepository(
 
     val animePausedListStyle =
         dataStore.getValue(ANIME_PAUSED_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setAnimePausedListStyle(value: ListStyle) {
         dataStore.setValue(ANIME_PAUSED_LIST_STYLE_KEY, value.name)
@@ -211,7 +200,7 @@ class DefaultPreferencesRepository(
 
     val animeDroppedListStyle =
         dataStore.getValue(ANIME_DROPPED_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setAnimeDroppedListStyle(value: ListStyle) {
         dataStore.setValue(ANIME_DROPPED_LIST_STYLE_KEY, value.name)
@@ -219,7 +208,7 @@ class DefaultPreferencesRepository(
 
     val mangaCurrentListStyle =
         dataStore.getValue(MANGA_CURRENT_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setMangaCurrentListStyle(value: ListStyle) {
         dataStore.setValue(MANGA_CURRENT_LIST_STYLE_KEY, value.name)
@@ -227,7 +216,7 @@ class DefaultPreferencesRepository(
 
     val mangaPlannedListStyle =
         dataStore.getValue(MANGA_PLANNED_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setMangaPlannedListStyle(value: ListStyle) {
         dataStore.setValue(MANGA_PLANNED_LIST_STYLE_KEY, value.name)
@@ -235,7 +224,7 @@ class DefaultPreferencesRepository(
 
     val mangaCompletedListStyle =
         dataStore.getValue(MANGA_COMPLETED_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setMangaCompletedListStyle(value: ListStyle) {
         dataStore.setValue(MANGA_COMPLETED_LIST_STYLE_KEY, value.name)
@@ -243,7 +232,7 @@ class DefaultPreferencesRepository(
 
     val mangaPausedListStyle =
         dataStore.getValue(MANGA_PAUSED_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setMangaPausedListStyle(value: ListStyle) {
         dataStore.setValue(MANGA_PAUSED_LIST_STYLE_KEY, value.name)
@@ -251,7 +240,7 @@ class DefaultPreferencesRepository(
 
     val mangaDroppedListStyle =
         dataStore.getValue(MANGA_DROPPED_LIST_STYLE_KEY, ListStyle.STANDARD.name)
-            .map { ListStyle.Companion.valueOfOrNull(it) ?: ListStyle.STANDARD }
+            .map { ListStyle.valueOfOrNull(it) ?: ListStyle.STANDARD }
 
     suspend fun setMangaDroppedListStyle(value: ListStyle) {
         dataStore.setValue(MANGA_DROPPED_LIST_STYLE_KEY, value.name)
@@ -259,8 +248,8 @@ class DefaultPreferencesRepository(
 
     companion object {
 
-        private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
-        private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
+        private val OLD_ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
+        private val OLD_REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
 
         private val NSFW_KEY = booleanPreferencesKey("nsfw")
         private val HIDE_SCORES_KEY = booleanPreferencesKey("hide_scores")

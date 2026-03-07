@@ -1,7 +1,6 @@
 package com.axiel7.moelist.data.repository
 
 import androidx.annotation.IntRange
-import com.axiel7.moelist.data.GlobalVariables
 import com.axiel7.moelist.data.model.Response
 import com.axiel7.moelist.data.model.anime.AnimeDetails
 import com.axiel7.moelist.data.model.anime.AnimeList
@@ -20,10 +19,9 @@ import com.axiel7.moelist.data.network.Api
 import io.ktor.http.HttpStatusCode
 
 class AnimeRepository(
-    globalVariables: GlobalVariables,
     private val api: Api,
     private val defaultPreferencesRepository: DefaultPreferencesRepository
-) : BaseRepository(globalVariables, api, defaultPreferencesRepository) {
+) {
 
     companion object {
         const val TODAY_FIELDS =
@@ -76,7 +74,6 @@ class AnimeRepository(
                 fields = fields,
             )
             else api.getSeasonalAnime(page)
-            result.error?.let { handleResponseError(it) }
             return if (isNew != null) {
                 result.copy(
                     // filter for new or continuing anime
@@ -104,8 +101,7 @@ class AnimeRepository(
                 fields = RECOMMENDED_FIELDS
             )
             else api.getAnimeRecommendations(page)
-            val retry = result.error?.let { handleResponseError(it) }
-            return if (retry == true) getRecommendedAnimes(limit, page) else result
+            return result
         } catch (e: Exception) {
             Response(message = e.message)
         }
@@ -116,7 +112,7 @@ class AnimeRepository(
     ): AnimeDetails? {
         return try {
             api.getAnimeDetails(animeId, ANIME_DETAILS_FIELDS)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -135,8 +131,7 @@ class AnimeRepository(
                 fields = USER_ANIME_LIST_FIELDS
             )
             else api.getUserAnimeList(page)
-            val retry = result.error?.let { handleResponseError(it) }
-            return if (retry == true) getUserAnimeList(status, sort, page) else result
+            return result
         } catch (e: Exception) {
             Response(message = e.message)
         }
@@ -157,7 +152,7 @@ class AnimeRepository(
         comments: String? = null,
     ): MyAnimeListStatus? {
         return try {
-            val result = api.updateUserAnimeList(
+            api.updateUserAnimeList(
                 animeId,
                 status,
                 score,
@@ -171,24 +166,7 @@ class AnimeRepository(
                 tags,
                 comments
             )
-            val retry = result.error?.let { handleResponseError(it) }
-            return if (retry == true) {
-                updateAnimeEntry(
-                    animeId,
-                    status,
-                    score,
-                    watchedEpisodes,
-                    startDate,
-                    endDate,
-                    isRewatching,
-                    numRewatches,
-                    rewatchValue,
-                    priority,
-                    tags,
-                    comments
-                )
-            } else result
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -199,7 +177,7 @@ class AnimeRepository(
         return try {
             val result = api.deleteAnimeEntry(animeId)
             return result.status == HttpStatusCode.OK
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -219,7 +197,6 @@ class AnimeRepository(
                 fields = SEARCH_FIELDS,
             )
             else api.getAnimeList(page)
-            result.error?.let { handleResponseError(it) }
             return result
         } catch (e: Exception) {
             Response(message = e.message)
@@ -242,7 +219,6 @@ class AnimeRepository(
                     fields = fields,
                 )
                 else api.getAnimeRanking(page)
-            result.error?.let { handleResponseError(it) }
             return result
         } catch (e: Exception) {
             Response(message = e.message)
@@ -289,7 +265,7 @@ class AnimeRepository(
     ): AnimeDetails? {
         return try {
             api.getAnimeDetails(animeId, fields = "id,status")
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -308,7 +284,6 @@ class AnimeRepository(
                 fields = CHARACTERS_FIELDS,
             )
             else api.getAnimeCharacters(page)
-            result.error?.let { handleResponseError(it) }
             return result
         } catch (e: Exception) {
             Response(message = e.message)
@@ -325,13 +300,10 @@ class AnimeRepository(
                 nsfw = defaultPreferencesRepository.nsfwInt(),
                 fields = "status,broadcast,alternative_titles{en,ja}"
             )
-
-            val retry = result.error?.let { handleResponseError(it) }
-            return if (retry == true) getAiringAnimeOnList()
-            else result.data?.map { it.node }
+            result.data?.map { it.node }
                 ?.filter { it.broadcast != null && it.status == MediaStatus.AIRING }
                 ?.sortedBy { it.broadcast!!.secondsUntilNextBroadcast() }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -350,7 +322,6 @@ class AnimeRepository(
                 fields = "id",
             ) else api.getUserAnimeList(page)
             result.error?.let {
-                handleResponseError(it)
                 return Response(error = result.error, message = result.message)
             }
             if (result.paging?.next != null) {

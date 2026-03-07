@@ -13,7 +13,7 @@ data class MainUiState(
     val theme: ThemeStyle = ThemeStyle.FOLLOW_SYSTEM,
     val useBlackColors: Boolean = false,
     val paletteStyle: PaletteStyle = PaletteStyle.Expressive,
-    val accessToken: String? = null,
+    val isLoggedIn: Boolean = false,
     val useListTabs: Boolean = false,
     val profilePicture: String? = null,
     val pinnedNavBar: Boolean = true,

@@ -14,24 +14,37 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.axiel7.moelist.data.repository.LoginRepository
-import com.axiel7.moelist.data.utils.MOELIST_PAGELINK
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.withCreated
 import com.axiel7.moelist.main.MainViewModel
 import com.axiel7.moelist.ui.base.model.BottomDestination.Companion.toBottomDestinationIndex
 import com.axiel7.moelist.ui.base.navigation.DeepLink
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.publicvalue.multiplatform.oidc.appsupport.AndroidCodeAuthFlowFactory
+import org.publicvalue.multiplatform.oidc.flows.CodeAuthFlowFactory
 
 class MainActivity : AppCompatActivity() {
 
     val viewModel by viewModel<MainViewModel>()
+
+    val codeAuthFlowFactory by inject<CodeAuthFlowFactory>()
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         installSplashScreen()
+        (codeAuthFlowFactory as? AndroidCodeAuthFlowFactory)?.registerActivity(this)
+
+        lifecycleScope.launch {
+            lifecycle.withCreated {
+                viewModel.continueAuthFlow()
+            }
+        }
 
         viewModel.setDeepLink(findDeepLink(intent))
 
@@ -64,20 +77,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun findDeepLink(intent: Intent): DeepLink<*>? {
-        return findLoginDeepLink(intent) ?: findMediaDeepLink(intent)
-    }
-
-    private fun findLoginDeepLink(intent: Intent): DeepLink<String>? {
-        return if (intent.data?.toString()?.startsWith(MOELIST_PAGELINK) == true) {
-            val code = intent.data!!.getQueryParameter("code")
-            val receivedState = intent.data!!.getQueryParameter("state")
-            if (code != null && receivedState == LoginRepository.STATE) {
-                DeepLink(
-                    type = DeepLink.Type.LOGIN,
-                    data = code,
-                )
-            } else null
-        } else null
+        return findMediaDeepLink(intent)
     }
 
     private fun findMediaDeepLink(intent: Intent): DeepLink<*>? {

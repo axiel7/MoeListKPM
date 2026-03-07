@@ -2,8 +2,8 @@ package com.axiel7.moelist.main
 
 import androidx.lifecycle.viewModelScope
 import com.axiel7.moelist.data.GlobalVariables
+import com.axiel7.moelist.data.network.OAuthService
 import com.axiel7.moelist.data.repository.DefaultPreferencesRepository
-import com.axiel7.moelist.data.repository.LoginRepository
 import com.axiel7.moelist.ui.base.navigation.DeepLink
 import com.axiel7.moelist.ui.base.viewmodel.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,10 +12,12 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 
+@OptIn(ExperimentalOpenIdConnect::class)
 class MainViewModel(
+    private val oAuthService: OAuthService,
     private val globalVariables: GlobalVariables,
-    private val loginRepository: LoginRepository,
     private val defaultPreferencesRepository: DefaultPreferencesRepository
 ) : BaseViewModel<MainUiState>(), MainEvent {
 
@@ -31,18 +33,17 @@ class MainViewModel(
         }
     }
 
-    override fun getAccessToken(code: String) {
-        viewModelScope.launch {
-            loginRepository.getAccessToken(code)
+    suspend fun initGlobalVariables() {
+        defaultPreferencesRepository.titleLang.firstOrNull()?.let {
+            globalVariables.titleLanguage = it
         }
     }
 
-    suspend fun initGlobalVariables() {
-        defaultPreferencesRepository.accessToken.firstOrNull()?.let {
-            globalVariables.accessToken = it
-        }
-        defaultPreferencesRepository.titleLang.firstOrNull()?.let {
-            globalVariables.titleLanguage = it
+    fun continueAuthFlow() {
+        viewModelScope.launch {
+            if (oAuthService.canContinueLogin()) {
+                oAuthService.continueLogin()
+            }
         }
     }
 
@@ -51,6 +52,12 @@ class MainViewModel(
     }
 
     init {
+        oAuthService.tokenStore.accessTokenFlow
+            .onEach { value ->
+                mutableUiState.update { it.copy(isLoggedIn = value != null) }
+            }
+            .launchIn(viewModelScope)
+
         defaultPreferencesRepository.theme
             .onEach { value ->
                 mutableUiState.update { it.copy(theme = value) }
@@ -66,12 +73,6 @@ class MainViewModel(
         defaultPreferencesRepository.paletteStyle
             .onEach { value ->
                 mutableUiState.update { it.copy(paletteStyle = value) }
-            }
-            .launchIn(viewModelScope)
-
-        defaultPreferencesRepository.accessToken
-            .onEach { value ->
-                mutableUiState.update { it.copy(accessToken = value) }
             }
             .launchIn(viewModelScope)
 
